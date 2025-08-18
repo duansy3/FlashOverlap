@@ -59,7 +59,7 @@ SignalFuncPtr signal_func_table[] = {
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 2, 1>,
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 3, 1>,
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 4, 1>,
-    &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 6, 1>,
+    &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 6, 1>,       //Algo[58] func
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 8, 1>,
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 4, 1, 1>,
     &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 4, 2, 1>,

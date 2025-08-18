@@ -244,9 +244,19 @@ void OverlapImpl::GemmAllReduceOverlap(
     int* cseg_gpu_ptr = cSEG_GPU.data_ptr<int>();
 
     int acc_addr = 0;
+
+//dsy:
+    //Algo是一个int，表示模板的编号，从algodict读到，再去function table中找到该编号对应的函数指针
+    //例如Algo 58 找到 &cutlass_gemm_signal<128, 256, 32, 64, 64, 32, 16, 8, 16, 3, 6, 1>     //Algo[58] func
+    //cutlass_gemm_signal的模板声明在src/overlap/gemm_signal.h：
+    //template <int ThreadblockM, int ThreadblockN, int ThreadblockK, int WarpM, int WarpN, int WarpK, 
+    //          int InstructionM, int InstructionN, int InstructionK, int NumStages, int SwizzleSize, int SplitK>
+    //void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, half* B, half* D, int* MM, int* RA, bool Monitor, cudaStream_t stream);
     signal_func_table[Algo](
-        M, N, K, rLDN, cseg_gpu_ptr, a_ptr, b_ptr, c_ptr, mm_ptr, ra_ptr, if_monitor, this->gemm_stream
+                                 M,      N,     K,     rLDN,     cseg_gpu_ptr,  a_ptr,  b_ptr,   c_ptr,   mm_ptr,  ra_ptr,  if_monitor,  this->gemm_stream
     );
+
+
     for (int iter = 0; iter < SegSize; iter++){
         int this_seg = cseg_cpu_ptr[iter];
         int commSize = M * N / TileNum * this_seg;

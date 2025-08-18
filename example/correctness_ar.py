@@ -60,7 +60,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--m', type=int, default=4096)
     parser.add_argument('--k', type=int, default=8192)
-    parser.add_argument('--n', type=int, default=4096)
+    parser.add_argument('--n', type=int, default=8192)
     args = parser.parse_args()
 
     world_size = torch.cuda.device_count()

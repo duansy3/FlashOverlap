@@ -36,6 +36,8 @@
     its usage has been stabilized. For now, it is included in this example to demonstrate
     some basic output fusion options.
 */
+//dsy: 这个h文件应该是从cutlass/examples的gemm_with_epilogue_visitor.h复制过来的
+
 
 #pragma once
 
@@ -61,7 +63,7 @@ template <
   typename Epilogue_,             ///! Epilogue
   typename ThreadblockSwizzle_    ///! Threadblock swizzling function
 >
-class GemmWithEpilogueVisitor {
+class GemmWithEpilogueVisitor {    
 public:
 
   using Mma = Mma_;

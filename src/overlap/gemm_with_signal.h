@@ -477,6 +477,10 @@ public:
   >;
 
   /// Epilogue
+  /*dsy: EpilogueWithVisitorFromExistingEpilogue 是一个适配器模板：
+    它接收一个已有的 Epilogue（这里是 DefaultGemmKernel::Epilogue）
+    加上一个 visitor（这里是 EpilogueVisitor = kernel::EpilogueVisitorSignaling ）
+    生成一个新的 Epilogue 类型，带有“访问者逻辑”的 epilogue。*/
   using Epilogue = typename cutlass::epilogue::threadblock::EpilogueWithVisitorFromExistingEpilogue<
     EpilogueVisitor,
     typename DefaultGemmKernel::Epilogue
@@ -636,7 +640,28 @@ public:
     return run(stream);
   }
 };
+/*
+CUTLASS 的典型风格：
 
+#Arguments
+表示用户在调用时传进来的、比较高层次的参数，通常用来描述“你要做什么”，比如矩阵大小、张量引用、alpha/beta 等缩放系数、批次数、步幅等。
+特点：不直接存 device 可用的指针，而是用 TensorRef、GemmCoord、MatrixCoord 等更抽象的结构，并且还会带默认值。
+构造函数里通常会把这些用户参数组装成底层 Kernel::Arguments 格式。
+
+#Params
+是 GPU kernel 真正运行时要用的结构，里面存的都是 CUDA kernel 可以直接用的东西（device 指针、数值、int32/64、已计算好的步幅等）。
+它通常由 Arguments 转换而来，避免在 kernel launch 里做太多复杂的计算。
+特点：更紧凑、更贴近硬件，不会有 STL 容器等 host-only 类型。
+
+#类成员 params_
+这个就是保存要传给 kernel 的完整参数，类的 run() 或 operator() 调用时，会直接把 params_ 交给 launch。
+
+##调用流程
+用户 new 一个 GemmSoftmax
+构造一个 Arguments，填好各种输入输出和配置
+调用 initialize() 或类似方法，把 Arguments 转成 Params
+调用 run(params_)，真正启动 kernel
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 } // namespace cutlass

@@ -80,7 +80,7 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
       (int64_t)N, 
       {
         ElementAccumulator(1.0f),
-        ElementAccumulator(0.0f)
+        ElementAccumulator(0.0f)   // Linear scaling parameters , alpha, beta
       },
       MM, 
       RA, 
@@ -96,6 +96,8 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
     CUTLASS_CHECK(gemm_op(stream));
 }
 
+
+//批量实例化： .inc文件本质上在多次调用这个宏
 #define CUTLASS_GEMM_SIGNAL_INIT(ThreadblockM, ThreadblockN, ThreadblockK, WarpM,         \
                                         WarpN, WarpK, InstructionM, InstructionN,                \
                                         InstructionK, NumStages, SwizzleSize, SplitK)                                                           \

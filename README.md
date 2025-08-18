@@ -117,12 +117,12 @@ Currently the repo supports two ways to generate the proper configs for GEMMs fo
 
 1. Using the [CUTLASS Profiler](https://github.com/NVIDIA/cutlass/blob/main/media/docs/cpp/profiler.md). Follow the README and write the profiling results in `$CSV_PATH/*.csv`. Then, generate the `.json` file in configs. 
 ```shell
-    $ python gen_config.py --m $M --n $N --k $K --path $CSV_PATH
+    $ python3 gen_config.py --m $M --n $N --k $K --path $CSV_PATH
 ```
 
 2. Using the customized profiler for a specific shape. The profiling process finishes within minutes. (This method has not been evaluated on RTX 4090 and RTX 3090 yet, will be updated soon.)
 ```shell
-    $ python profile_config.py --m $M --n $N --k $K
+    $ python3 profile_config.py --m  --n  --k 
 ```
 
 ### Tune
@@ -130,11 +130,11 @@ Tune the wave group size. Note multiple GPUs are needed in this program and the 
 
 1. The repo provides both the exhaustive and predictive search methods, and the latter is recommended when `MxN>4096x4096`. If the predictive method is chosen, please generate the bandwidth curve first. Given GPU and communication primitive, the bandwidth curve needs only one generation. 
 ```shell
-    $ CUDA_VISIBLE_DEVICES=0,1 python bandwidth.py --comm_op all_reduce
+    $ CUDA_VISIBLE_DEVICES=0,1 python3 bandwidth.py --comm_op all_reduce
 ```
 2. Two search methods share the same script, `--predictive_search` should be specified if used.
 ```shell
-    $ CUDA_VISIBLE_DEVICES=0,1 python search.py --m $M --n $N --k $K --comm_op {all_reduce, reduce_scatter} --predictive_search True
+    $ CUDA_VISIBLE_DEVICES=0,1 python3 search.py --m  --n  --k  --comm_op all_reduce, reduce_scatter --predictive_search True
 ```
 3. The generated solution is written into the corresponding `.json` file. 
 
@@ -142,7 +142,7 @@ Tune the wave group size. Note multiple GPUs are needed in this program and the 
 Open the test dir and run the script.
 ```shell
     $ cd ./test
-    $ CUDA_VISIBLE_DEVICES=0,1 python test.py --m $M --n $N --k $K --comm_op {all_reduce, reduce_scatter}
+    $ CUDA_VISIBLE_DEVICES=0,1 python3 test.py --m $M --n $N --k $K --comm_op all_reduce, reduce_scatter
 ```
 
 ### Correctness Test
