@@ -1,5 +1,13 @@
 {
     "files.associations": {
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "atomic": "cpp",
+        "memory_resource": "cpp",
+        "stop_token": "cpp",
+        "__config": "cpp",
+        "semaphore": "cpp",
+        "*.inc": "cpp",
+        "tuple": "cpp",
+        "numeric": "cpp"
     }
 }

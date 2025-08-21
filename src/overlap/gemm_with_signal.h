@@ -562,7 +562,6 @@ public:
     Params(Arguments const &args):
       gemm(args.gemm)
     {
-
     }
   };
 

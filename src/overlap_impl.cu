@@ -8,6 +8,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <cuda_bf16.h>   //dsy: for bfloat16
+
 #include <math.h>
 #include <string>
 #include <stdio.h>
@@ -68,15 +70,20 @@ void OverlapImpl::GemmAllReduce(at::Tensor A, at::Tensor B, at::Tensor C, int64_
     int K = A.size(1);
     int N = B.size(0);
 
-    half* a_ptr = reinterpret_cast<half *>(A.data_ptr<at::Half>());
-    half* b_ptr = reinterpret_cast<half *>(B.data_ptr<at::Half>());
-    half* c_ptr = reinterpret_cast<half *>(C.data_ptr<at::Half>());
+    // half* a_ptr = reinterpret_cast<half *>(A.data_ptr<at::Half>());
+    // half* b_ptr = reinterpret_cast<half *>(B.data_ptr<at::Half>());
+    // half* c_ptr = reinterpret_cast<half *>(C.data_ptr<at::Half>());
+    //dsy: for bfloat16 
+    __nv_bfloat16* a_ptr = reinterpret_cast<__nv_bfloat16*>(A.data_ptr<at::BFloat16>());
+    __nv_bfloat16* b_ptr = reinterpret_cast<__nv_bfloat16*>(B.data_ptr<at::BFloat16>());
+    __nv_bfloat16* c_ptr = reinterpret_cast<__nv_bfloat16*>(C.data_ptr<at::BFloat16>());
 
-    gemm_func_table[Algo](
-        M, N, K, a_ptr, b_ptr, c_ptr, this->gemm_stream
-    );
+    // gemm_func_table[Algo](
+    //     M, N, K, a_ptr, b_ptr, c_ptr, this->gemm_stream
+    // );
 
-    NCCL_CHECK(ncclAllReduce((void *)c_ptr, (void *)c_ptr, (M * N), ncclFloat16, ncclSum, this->comm, this->gemm_stream));
+    //dsy: for bfloat16
+    //NCCL_CHECK(ncclAllReduce((void *)c_ptr, (void *)c_ptr, (M * N), ncclBfloat16, ncclSum, this->comm, this->gemm_stream));
 }
 
 void OverlapImpl::GemmReduceScatter(
@@ -234,9 +241,14 @@ void OverlapImpl::GemmAllReduceOverlap(
 
     int SegSize = cSEG_GPU.size(0);
 
-    half* a_ptr = reinterpret_cast<half *>(A.data_ptr<at::Half>());
-    half* b_ptr = reinterpret_cast<half *>(B.data_ptr<at::Half>());
-    half* c_ptr = reinterpret_cast<half *>(C.data_ptr<at::Half>());
+    // half* a_ptr = reinterpret_cast<half *>(A.data_ptr<at::Half>());
+    // half* b_ptr = reinterpret_cast<half *>(B.data_ptr<at::Half>());
+    // half* c_ptr = reinterpret_cast<half *>(C.data_ptr<at::Half>());
+    nv_bfloat16* a_ptr = reinterpret_cast<nv_bfloat16*>(A.data_ptr<at::BFloat16>());
+    nv_bfloat16* b_ptr = reinterpret_cast<nv_bfloat16*>(B.data_ptr<at::BFloat16>());
+    nv_bfloat16* c_ptr = reinterpret_cast<nv_bfloat16*>(C.data_ptr<at::BFloat16>());
+    //dsy: for bfloat16
+
     int* mm_ptr = MM.data_ptr<int>();
     int* ra_ptr = RA.data_ptr<int>();
 
@@ -263,7 +275,8 @@ void OverlapImpl::GemmAllReduceOverlap(
         // The signal is reset by the wait kernel
         kernel_wait_flag<<<1, 1, 0, this->comm_stream>>> (this_seg, (mm_ptr + iter));
         // Communicate the data
-        NCCL_CHECK(ncclAllReduce((void *)(c_ptr + acc_addr), (void *)(c_ptr + acc_addr), commSize, ncclFloat16, ncclSum, this->comm, this->comm_stream));
+        //dsy:bf16
+        NCCL_CHECK(ncclAllReduce((void *)(c_ptr + acc_addr), (void *)(c_ptr + acc_addr), commSize, ncclBfloat16, ncclSum, this->comm, this->comm_stream));
         acc_addr += commSize;
     }
 

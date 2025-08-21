@@ -4,10 +4,18 @@
 #include "../overlap/gemm_signal.h"
 #include "../overlap/gemm_scatter.h"
 
+// typedef void (*SignalFuncPtr)(
+//     int M, int N, int K, 
+//     int ReLDN, int* CommThr, 
+//     half* A, half* B, half* D, 
+//     int* MM, int* RA, bool Monitor, 
+//     cudaStream_t stream
+// );
+//dsy: for bfloat16
 typedef void (*SignalFuncPtr)(
     int M, int N, int K, 
     int ReLDN, int* CommThr, 
-    half* A, half* B, half* D, 
+    nv_bfloat16* A, nv_bfloat16* B, nv_bfloat16* D, 
     int* MM, int* RA, bool Monitor, 
     cudaStream_t stream
 );

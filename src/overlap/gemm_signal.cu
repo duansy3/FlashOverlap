@@ -1,4 +1,5 @@
 #include <cuda_fp16.h>
+#include <cuda_bf16.h>   //dsy: for bfloat16
 
 #include "cutlass/cutlass.h"
 #include "cutlass/arch/memory.h"
@@ -14,30 +15,35 @@
 
 template <int ThreadblockM, int ThreadblockN, int ThreadblockK, int WarpM, int WarpN, int WarpK, 
 int InstructionM, int InstructionN, int InstructionK, int NumStages, int SwizzleSize, int SplitK>
-void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, half* B, half* D, int* MM, int* RA, bool Monitor, cudaStream_t stream = nullptr){
-
+void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, nv_bfloat16* A, nv_bfloat16* B, nv_bfloat16* D, int* MM, int* RA, bool Monitor, cudaStream_t stream){
+//void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, half* B, half* D, int* MM, int* RA, bool Monitor, cudaStream_t stream = nullptr){
+//dsy: for bfloat16
     using ThreadblockShape = cutlass::gemm::GemmShape<ThreadblockM, ThreadblockN, ThreadblockK>;
     using WarpShape = cutlass::gemm::GemmShape<WarpM, WarpN, WarpK>;
     using InstructionShape = cutlass::gemm::GemmShape<InstructionM, InstructionN, InstructionK>;
     cutlass::gemm::GemmCoord problem_size(M, N, K);
 
     // A matrix configuration
-    using ElementA = cutlass::half_t;                                // Element type for A matrix operand
+    using ElementA = cutlass::bfloat16_t;                                // Element type for A matrix operand
+    //using ElementA = cutlass::half_t;                                // Element type for A matrix operand
     using LayoutA = cutlass::layout::RowMajor;                      // Layout type for A matrix operand
     constexpr int AlignmentA  = 128 / cutlass::sizeof_bits<ElementA>::value;    // Memory access granularity/alignment of A matrix in units of elements (up to 16 bytes)
 
     // B matrix configuration
-    using ElementB = cutlass::half_t;                                // Element type for B matrix operand
+    using ElementB = cutlass::bfloat16_t;                                // Element type for B matrix operand
+    //using ElementB = cutlass::half_t;                                // Element type for B matrix operand
     using LayoutB = cutlass::layout::ColumnMajor;                      // Layout type for B matrix operand
     constexpr int AlignmentB  = 128 / cutlass::sizeof_bits<ElementB>::value;    // Memory access granularity/alignment of B matrix in units of elements (up to 16 bytes)
 
     // C/D matrix configuration
-    using ElementC = cutlass::half_t;                                // Element type for C and D matrix operands
+    using ElementC = cutlass::bfloat16_t;                                // Element type for C and D matrix operands
+    //using ElementC = cutlass::half_t;                                // Element type for C and D matrix operands
     using LayoutC = cutlass::layout::RowMajor;                      // Layout type for C and D matrix operands
     constexpr int AlignmentC  = 128 / cutlass::sizeof_bits<ElementC>::value;    // Memory access granularity/alignment of C/D matrices in units of elements (up to 16 bytes)
 
     // Multiply-accumulate blocking/pipelining details
-    using ElementAccumulator  = cutlass::half_t;                          // Element type for internal accumulation
+    using ElementAccumulator = float;                      // Element type for internal accumulation
+    //using ElementAccumulator  = cutlass::half_t;                          // Element type for internal accumulation
     using ArchTag             = cutlass::arch::Sm80;                      // Tag indicating the minimum SM that supports the intended feature
     using OperatorClass       = cutlass::arch::OpClassTensorOp;           // Operator class tag
 
@@ -59,7 +65,8 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
       LayoutB, 
       ElementC,
       LayoutC,
-      ElementAccumulator,
+      //ElementAccumulator,
+      float,  //dsy: for bfloat16
       EpilogueOp,
       ThreadblockShape,
       WarpShape,
@@ -67,13 +74,17 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
       NumStages,
       SwizzleSize
     >;
-
+    //dsy: for bfloat16
     typename GemmSignal::Arguments arguments(
       problem_size,
-      reinterpret_cast<cutlass::half_t*>(A),
-      reinterpret_cast<cutlass::half_t*>(B), 
-      reinterpret_cast<cutlass::half_t*>(D), 
-      reinterpret_cast<cutlass::half_t*>(D), 
+      // reinterpret_cast<cutlass::half_t*>(A),
+      // reinterpret_cast<cutlass::half_t*>(B), 
+      // reinterpret_cast<cutlass::half_t*>(D), 
+      // reinterpret_cast<cutlass::half_t*>(D), 
+      reinterpret_cast<cutlass::bfloat16_t*>(A),
+      reinterpret_cast<cutlass::bfloat16_t*>(B),
+      reinterpret_cast<cutlass::bfloat16_t*>(D),
+      reinterpret_cast<cutlass::bfloat16_t*>(D),
       (int64_t)K, 
       (int64_t)K, 
       (int64_t)N, 
@@ -104,8 +115,9 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
     template void                                                                                                    \
     cutlass_gemm_signal<ThreadblockM, ThreadblockN, ThreadblockK, WarpM, WarpN, \
                                     WarpK, InstructionM, InstructionN, InstructionK, NumStages, SwizzleSize, SplitK>(            \
-        int M, int N, int K, int ReLDN, int* CommThr, half* A, half* B, half* D, int* MM, int* RA, bool Monitor, cudaStream_t stream = nullptr)
-
+          int M, int N, int K, int ReLDN, int* CommThr, nv_bfloat16* A, nv_bfloat16* B, nv_bfloat16* D, int* MM, int* RA, bool Monitor, cudaStream_t stream)
+//        int M, int N, int K, int ReLDN, int* CommThr, half* A, half* B, half* D, int* MM, int* RA, bool Monitor, cudaStream_t stream = nullptr)
+//dsy: for bfloat16
 #include "../inc/signal_instances.inc"
 
 #undef CUTLASS_GEMM_SIGNAL_INIT

@@ -87,9 +87,13 @@ def perf_running_process(rank, world_size, nccl_id,
     gemm_class.cutlass_init()
     gemm_class.overlap_init()
 
-    A = torch.empty((M, K), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
-    B = torch.empty((N, K), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
-    C = torch.empty((M, N), dtype=torch.float16, device="cuda")
+    # A = torch.empty((M, K), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
+    # B = torch.empty((N, K), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
+    # C = torch.empty((M, N), dtype=torch.float16, device="cuda")
+
+    A = torch.empty((M, K), dtype=torch.bfloat16, device="cuda").normal_(mean=0., std=0.5)
+    B = torch.empty((K, N), dtype=torch.bfloat16, device="cuda").normal_(mean=0., std=0.5)
+    C = torch.empty((M, N), dtype=torch.bfloat16, device="cuda")
 
     MonitoredMatrix = torch.zeros(((N+BN-1)//BN), dtype=torch.int, device="cuda")
     ReorderedArray = reorder_indices(TileNum, hint).reshape(((M+BM-1)//BM, (N+BN-1)//BN))
