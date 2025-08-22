@@ -1,0 +1,2 @@
+/usr/bin/ar qc liboverlap_impl.a CMakeFiles/overlap_impl.dir/overlap_impl.cu.o
+/usr/bin/ranlib liboverlap_impl.a

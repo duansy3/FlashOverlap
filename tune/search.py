@@ -458,7 +458,7 @@ def fast_search(M: int, N: int, K: int, comm_array: torch.Tensor, comm_op: str):
         tile_num = div_up(M, BM) * div_up(N, BN)
         wave_num = div_up(tile_num, (sm_count - 2))
 
-        min_group_size = div_up(wave_num, 10)
+        min_group_size = div_up(wave_num, 5)  #dsy
 
         #compute hint
         result = compute_hint(M, N, K, BM, BN, Algo, min_group_size * (sm_count - 2), comm_op)

@@ -1,0 +1,2 @@
+/usr/bin/ar qc liboverlap.a CMakeFiles/overlap.dir/overlap/gemm_scatter.cu.o CMakeFiles/overlap.dir/overlap/gemm_signal.cu.o
+/usr/bin/ranlib liboverlap.a

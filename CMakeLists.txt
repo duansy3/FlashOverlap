@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(flashoverlap LANGUAGES CXX CUDA)
+find_package(PythonInterp REQUIRED)
 
 if (DEFINED ENV{CONDA_PREFIX})
   # use conda environment
@@ -55,7 +56,7 @@ list(APPEND COMMON_LIB_DIRS ${MPI_LIBRARIES} ${NCCL_LIBRARIES})
 set(COMMON_LIBS CUDA::cudart)
 
 # Add Python into COMMON_HEADER_DIRS & COMMON_LIB_DIRS
-set(PYTHON_PATH "python" CACHE STRING "Python path")
+set(PYTHON_PATH "python3" CACHE STRING "Python path")
 execute_process(COMMAND ${PYTHON_PATH} "-c" "import sysconfig;
 print(sysconfig.get_paths()['include']);"
                   RESULT_VARIABLE _PYTHON_SUCCESS
@@ -64,6 +65,8 @@ if (NOT _PYTHON_SUCCESS MATCHES 0)
 	message(FATAL_ERROR "Python config Error.")
 endif()
 list(APPEND COMMON_HEADER_DIRS ${PY_INCLUDE_DIR})
+#set(NVTX3_INCLUDE_DIR "/usr/local/cuda-12.4/targets/x86_64-linux/include/nvtx3/")
+#include_directories(${NVTX3_INCLUDE_DIR})
 
 # Add LibTorch into COMMON_HEADER_DIRS & COMMON_LIB_DIRS
 execute_process(COMMAND ${PYTHON_PATH} "-c" "import os; import torch;
