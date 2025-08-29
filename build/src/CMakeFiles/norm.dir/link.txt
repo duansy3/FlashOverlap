@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnorm.a CMakeFiles/norm.dir/rmsnorm/rmsnorm.cu.o
+/usr/bin/ranlib libnorm.a

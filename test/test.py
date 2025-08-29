@@ -104,7 +104,7 @@ def perf_running_process(rank, world_size, nccl_id,
     
     _warm_up = WARM_UP
     _freq = REP
-
+    print(f"cSeg: {cSeg}")
     if len(cSeg) == 1:
         # No overlapping
         if comm_op == "all_reduce":
@@ -140,6 +140,7 @@ def perf_running_process(rank, world_size, nccl_id,
     else:
         if comm_op == "all_reduce":
             for _ in range(_warm_up):
+                print("warm up")
                 gemm_class.gemm_allreduce_overlap(A, B, C, MonitoredMatrix, ReorderedArray, 1, cSeg_CPU, cSeg_GPU, Algo, False)
 
             start_event = [torch.cuda.Event(enable_timing=True) for i in range(_freq)]

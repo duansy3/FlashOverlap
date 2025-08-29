@@ -622,7 +622,10 @@ public:
         return Status::kErrorInternal;
       }
     }
-
+    printf("GemmSignal::run: grid(%d, %d, %d) block(%d, %d, %d) smem_size(%d)\n",
+           gemm_grid.x, gemm_grid.y, gemm_grid.z,
+           gemm_block.x, gemm_block.y, gemm_block.z,
+           gemm_smem_size);
     cutlass::Kernel<GemmEpilogueFusion><<<gemm_grid, gemm_block, gemm_smem_size, stream>>>(params_.gemm);
 
     result = cudaGetLastError();

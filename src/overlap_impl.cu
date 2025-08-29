@@ -270,12 +270,14 @@ void OverlapImpl::GemmAllReduceOverlap(
 
 
     for (int iter = 0; iter < SegSize; iter++){
+        printf("rank %d, iter %d / %d\n", this->my_rank, iter, SegSize); //dsy
         int this_seg = cseg_cpu_ptr[iter];
         int commSize = M * N / TileNum * this_seg;
         // The signal is reset by the wait kernel
         kernel_wait_flag<<<1, 1, 0, this->comm_stream>>> (this_seg, (mm_ptr + iter));
         // Communicate the data
         //dsy:bf16
+        printf("rank %d before allreduce, commSize %d\n", this->my_rank, commSize); //dsy
         NCCL_CHECK(ncclAllReduce((void *)(c_ptr + acc_addr), (void *)(c_ptr + acc_addr), commSize, ncclBfloat16, ncclSum, this->comm, this->comm_stream));
         acc_addr += commSize;
     }

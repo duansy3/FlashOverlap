@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbaseline_impl.a CMakeFiles/baseline_impl.dir/baseline_impl.cu.o
+/usr/bin/ranlib libbaseline_impl.a

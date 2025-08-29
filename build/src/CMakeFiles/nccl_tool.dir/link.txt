@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnccl_tool.a CMakeFiles/nccl_tool.dir/nccl_utils.cu.o
+/usr/bin/ranlib libnccl_tool.a
