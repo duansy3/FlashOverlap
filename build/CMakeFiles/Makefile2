@@ -265,12 +265,12 @@ src/CMakeFiles/nccl_tool.dir/clean:
 # Target rules for target src/CMakeFiles/st_pybinding.dir
 
 # All Build rule for target.
-src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/baseline_impl.dir/all
-src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/overlap_impl.dir/all
-src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/nccl_tool.dir/all
 src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/gemm.dir/all
 src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/overlap.dir/all
 src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/norm.dir/all
+src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/baseline_impl.dir/all
+src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/overlap_impl.dir/all
+src/CMakeFiles/st_pybinding.dir/all: src/CMakeFiles/nccl_tool.dir/all
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/st_pybinding.dir/build.make src/CMakeFiles/st_pybinding.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/st_pybinding.dir/build.make src/CMakeFiles/st_pybinding.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/sgl-workspace/FlashOverlap/build/CMakeFiles --progress-num=14,15 "Built target st_pybinding"

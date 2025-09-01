@@ -1,0 +1,31 @@
+Determining if the NCCL_VERSION_CODE exist failed with the following output:
+Change Dir: /sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b2e09/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b2e09.dir/build.make CMakeFiles/cmTC_b2e09.dir/build
+gmake[1]: Entering directory '/sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_b2e09.dir/CheckSymbolExists.cxx.o
+/usr/bin/c++   -std=gnu++17 -o CMakeFiles/cmTC_b2e09.dir/CheckSymbolExists.cxx.o -c /sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx
+In file included from /sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx:2:
+/usr/include/nccl.h:10:10: fatal error: cuda_runtime.h: No such file or directory
+   10 | #include <cuda_runtime.h>
+      |          ^~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[1]: *** [CMakeFiles/cmTC_b2e09.dir/build.make:78: CMakeFiles/cmTC_b2e09.dir/CheckSymbolExists.cxx.o] Error 1
+gmake[1]: Leaving directory '/sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_b2e09/fast] Error 2
+
+
+File /sgl-workspace/FlashOverlap/build/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx:
+/* */
+#include <nccl.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef NCCL_VERSION_CODE
+  return ((int*)(&NCCL_VERSION_CODE))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
