@@ -395,7 +395,7 @@ public:
     threadblock_tile_offset = threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
 
     //assume identity swizzle
-    MatrixCoord threadblock_offset(
+    MatrixCoord threadblock_offset(         
       threadblock_tile_offset.m() * Mma::Shape::kM,
       threadblock_tile_offset.n() * Mma::Shape::kN
     );
@@ -406,14 +406,14 @@ public:
     // Construct the epilogue visitor
     //
 
-    EpilogueVisitor epilogue_visitor(
+    EpilogueVisitor epilogue_visitor(    //using EpilogueVisitor = typename Epilogue::Visitor;
       params.epilogue_visitor,
       shared_storage.epilogue.visitor,
       params.problem_size.mn(),
       thread_idx,
       warp_idx,
       lane_idx,
-      threadblock_offset);
+      threadblock_offset);     
 
     if (params.mode == GemmUniversalMode::kGemm) {
       // Indicate which position in a serial reduction the output operator is currently updating
@@ -424,7 +424,7 @@ public:
     }
 
     // Construct the epilogue
-    Epilogue epilogue(
+    Epilogue epilogue(    //using Epilogue = Epilogue_;   =cutlass::epilogue::threadblock::EpilogueWithVisitorFromExistingEpilogue
       shared_storage.epilogue.epilogue,
       thread_idx,
       warp_idx,

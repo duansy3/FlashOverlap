@@ -4,6 +4,7 @@
         e.g., CUDA_VISIBLE_DEVICES=0,1 python3 search.py --m 4096 --n 8192 --k 4096 --comm_op all_reduce
 '''
 
+import time
 import torch
 import argparse
 import pandas as pd
@@ -11,6 +12,8 @@ import json
 from pathlib import Path
 import torch.multiprocessing as mp
 import numpy as np
+from torch.profiler import profile, record_function, ProfilerActivity
+import torch.cuda.nvtx as nvtx
 
 torch.ops.load_library("../build/lib/libst_pybinding.so")
 
@@ -47,6 +50,10 @@ def save_solution(M: int, N: int, K: int, BM: int, BN: int, gemm_dur: float, Alg
     data["BN"] = BN
     data["dur"] = gemm_dur
     data["Algo"] = Algo
+
+    #dsy: save the solution to a new json file
+    file_path = f'../configs/solution_m{M}n{N}k{K}_{gpu_name}.json'
+    
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4)
 
@@ -84,7 +91,7 @@ def compute_hint_process(rank, world_size, nccl_id,
     M: int, N: int, K: int,
     BM: int, BN: int, Algo: list, wSize: int, comm_op: str, 
     result_dict):
-
+    #dsy:print("compute hint process on rank ", rank)
     TileNum = div_up(M, BM) * div_up(N, BN)
     WaveNum = div_up(TileNum, wSize) 
 
@@ -142,18 +149,21 @@ def compute_hint_process(rank, world_size, nccl_id,
         assert comm_op in ["all_reduce", "reduce_scatter"], \
             f"comm_op must be 'all_reduce' or 'reduce_scatter', but got '{comm_op}'"
 
+    # print(f"rank:{rank}, MonitoredMatrix shape: {MonitoredMatrix.shape}")
+    # print(f"rank:{rank}, samples shape: {samples.shape}, samples: {samples}")
     hint = []
     is_consistency = True
-    for w in range(WaveNum):
-        index = torch.where(((samples >= w * wSize) * (samples < (w + 1) * wSize)).sum(dim=0) == 10)
-
+    for w in range(WaveNum):     #wSize是外部参数，为min_group_size * (sm_count - 2) ， WaveNum = div_up(TileNum, wSize) ，samples的单位是tile级别
+        index = torch.where(((samples >= w * wSize) * (samples < (w + 1) * wSize)).sum(dim=0) == 10) 
+        #找出所有 在区间 [w*wSize, (w+1)*wSize) 内恰好有 10 个样本的列索引。一列最多也就10个符合的样本，因为samples是10行二维矩阵
+        if(rank==0): print(f"rank:{rank}, group:{w}, index : {index[0]}")
         if w < WaveNum - 1:
-            if index[0].shape[0] < wSize:
-                is_consistency = False
+            if index[0].shape[0] < wSize:   #index[0] 是一维 tensor，里面是满足条件的列号,最多有wSize个列号
+                is_consistency = False      #如果列号数量不够，说明不一致？为啥？
                 break
 
-        hint = hint + index[0].tolist()
-        
+        hint = hint + index[0].tolist()       #如果每次循环都没有break，则每次列号都是够的，hint最终长度应该等于TileNum
+    # print(f"rank:{rank},hint length: {len(hint)}")
     result_dict[rank] = (is_consistency, hint)
 
 def compute_hint(M: int, N: int, K: int,
@@ -174,7 +184,7 @@ def compute_hint(M: int, N: int, K: int,
             args=(world_size, nccl_id, M, N, K, BM, BN, Algo, wSize, comm_op, result_dict),
             nprocs=world_size
         )
-
+    #print("result_dict[0]: ", result_dict[0])
     return result_dict[0]
 
 def interpolate_latency(samples, x, comm_op):
@@ -277,14 +287,21 @@ def perf_running_process(rank, world_size, nccl_id,
 
     MonitoredMatrix = torch.zeros(((N+BN-1)//BN), dtype=torch.int, device="cuda")
     ReorderedArray = reorder_indices(TileNum, hint).reshape(((M+BM-1)//BM, (N+BN-1)//BN))
+    
+    if(rank == 0): ##dsy:
+
+        print(f"rank:{rank}, hint.reshape: {torch.tensor(hint).reshape(((M+BM-1)//BM, (N+BN-1)//BN))}")
+        print(f"rank:{rank}, ReorderedArray: {ReorderedArray}")
 
     if comm_op == "reduce_scatter":
         D = torch.empty((M // world_size, N), dtype=torch.float16, device="cuda")
         RowArray = generate_row_remap_array(M, N, BM, BN, cSeg, world_size)
     
-    _warm_up = 20
-    _freq = 200
+    _warm_up = 5
+    _freq = 5
 
+    if(rank == 0): ##dsy:
+        nvtx.range_push("perf_running_process")
     if len(cSeg) == 1:
         # No overlapping
         if comm_op == "all_reduce":
@@ -345,6 +362,9 @@ def perf_running_process(rank, world_size, nccl_id,
         else:
             dur = torch.zeros((_freq))
 
+    if(rank == 0): ##dsy:
+        nvtx.range_pop()
+
     result_dict[rank] = torch.mean(dur).item()
     
 def perf_running(M: int, N: int, K: int, 
@@ -360,13 +380,13 @@ def perf_running(M: int, N: int, K: int,
 
     manager = mp.Manager()
     result_dict = manager.dict()
-
+    
     mp.spawn(
             perf_running_process,
             args=(world_size, nccl_id, M, N, K, BM, BN, Algo, cSeg, hint, comm_op, result_dict),
             nprocs=world_size
         )
-
+    
     dur = torch.empty((world_size))
     for i in range(world_size):
         dur[i] = result_dict[i]
@@ -402,10 +422,11 @@ def exhaustive_search(M: int, N: int, K: int, comm_op: str):
 
         tile_num = div_up(M, BM) * div_up(N, BN)
         wave_num = div_up(tile_num, (sm_count - 2))
-
+        print(f"tile_num:{tile_num}, wave_num: {wave_num}")
+        print(f"{t}th compute hint...")
         #compute hint
         result = compute_hint(M, N, K, BM, BN, Algo, (sm_count - 2), comm_op)
-
+        
         if result[0] == True:
             hint = result[1]
             break
@@ -416,6 +437,9 @@ def exhaustive_search(M: int, N: int, K: int, comm_op: str):
     min_dur = 1e5
 
     group_size_list = integer_partitions(wave_num)
+
+    #dsy:
+    print(f"Total candidate group: {group_size_list}")
     group_choice = len(group_size_list)
     for i in range(group_choice):
         gp = group_size_list[i]
@@ -457,10 +481,12 @@ def fast_search(M: int, N: int, K: int, comm_array: torch.Tensor, comm_op: str):
 
         tile_num = div_up(M, BM) * div_up(N, BN)
         wave_num = div_up(tile_num, (sm_count - 2))
+        print(f"tile_num:{tile_num},sm_count:{sm_count}, wave_num: {wave_num}")
 
-        min_group_size = div_up(wave_num, 5)  #dsy
-
+        min_group_size = div_up(wave_num, 5)  #dsy: original: (wave_num,10)
+        print(f"min_group_size: {min_group_size}")
         #compute hint
+        print(f"{t}th compute hint...")
         result = compute_hint(M, N, K, BM, BN, Algo, min_group_size * (sm_count - 2), comm_op)
 
         if result[0] == True:
@@ -469,11 +495,14 @@ def fast_search(M: int, N: int, K: int, comm_array: torch.Tensor, comm_op: str):
 
     assert hint != None, "Tuning fails! Try to increase min_group_size manully."
     print("Start predictive searching.")
-    
+    start = time.time()
     min_dur = 1e5
     normalized_wave_num = div_up(wave_num, min_group_size)
     group_size_list = integer_partitions(normalized_wave_num)
     
+    #dsy:
+    print(f"Total candidate group: {group_size_list}")
+
     group_choice = len(group_size_list)
     for i in range(group_choice):
         gp = group_size_list[i]
@@ -494,8 +523,13 @@ def fast_search(M: int, N: int, K: int, comm_array: torch.Tensor, comm_op: str):
             min_dur = est_dur
             cSeg = gp
     print("Search process finished.")
+    end=time.time()
+    print("Predict Search time: %.4f s" % (end - start))
 
+    nvtx.range_push("perf_running")
     searched_lat = perf_running(M, N, K, BM, BN, Algo, cSeg, hint, comm_op)
+    nvtx.range_pop()
+
     print("Searched latency: %.4f" % searched_lat)
     print("Best solution: ", cSeg)
     save_solution(M, N, K, BM, BN, gemm_dur, Algo, hint, cSeg)
@@ -516,7 +550,7 @@ def main():
     args = parser.parse_args()
 
     # Force to use predictive search if the workload is large
-    if args.predictive_search or args.m * args.n > 33554432:
+    if args.predictive_search :#dsy: original: or args.m * args.n > 33554432:  
         comm_array = torch.load(f"../configs/bandwidth_{args.comm_op}_tp{world_size}.pt")
         print("Bandwidth curve captured.")
         fast_search(args.m, args.n, args.k, comm_array, args.comm_op)

@@ -513,14 +513,14 @@ public:
       int64_t    ldm_C,
       int64_t    ldm_D,
       typename EpilogueFunctorOp::Params linear_scaling, 
-      int * ptr_MM, 
+      int * ptr_MM,   //// Monitored Matrix,size TM + 1, TN
       int * ptr_RA, 
       int ldm_MM,
-      int red_TN,
+      int red_TN,    //allreduce情况下该值好像是1
       int * thr_CM,
       bool Monitor
     ):
-      gemm(
+      gemm(      //typename GemmEpilogueFusion::Arguments   gemm;
         cutlass::gemm::GemmUniversalMode::kGemm,
         {kInternalTranspose ? problem_size.n() : problem_size.m(),\
          kInternalTranspose ? problem_size.m() : problem_size.n(),\
