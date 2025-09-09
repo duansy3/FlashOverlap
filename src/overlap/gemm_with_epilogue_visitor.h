@@ -220,7 +220,8 @@ public:
         }
       }
 
-      swizzle_log_tile = threadblock_swizzle.get_log_tile(grid_tiled_shape);
+      //swizzle_log_tile = threadblock_swizzle.get_log_tile(grid_tiled_shape);
+      swizzle_log_tile = 0; //dsy: disable swizzle for now
     }
   };
 

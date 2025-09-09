@@ -292,6 +292,10 @@ def perf_running_process(rank, world_size, nccl_id,
 
         print(f"rank:{rank}, hint.reshape: {torch.tensor(hint).reshape(((M+BM-1)//BM, (N+BN-1)//BN))}")
         print(f"rank:{rank}, ReorderedArray: {ReorderedArray}")
+        with open("RA.txt", "w") as f:
+            for row in ReorderedArray:
+                row_str = ",".join(str(x.item()) for x in row)
+                f.write(row_str + "\n")
 
     if comm_op == "reduce_scatter":
         D = torch.empty((M // world_size, N), dtype=torch.float16, device="cuda")
@@ -483,7 +487,7 @@ def fast_search(M: int, N: int, K: int, comm_array: torch.Tensor, comm_op: str):
         wave_num = div_up(tile_num, (sm_count - 2))
         print(f"tile_num:{tile_num},sm_count:{sm_count}, wave_num: {wave_num}")
 
-        min_group_size = div_up(wave_num, 5)  #dsy: original: (wave_num,10)
+        min_group_size = div_up(wave_num, 10)  #dsy: original: (wave_num,10)
         print(f"min_group_size: {min_group_size}")
         #compute hint
         print(f"{t}th compute hint...")
