@@ -1,0 +1,130 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"jsonFile" : "directory-.-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "src",
+					"jsonFile" : "directory-src-b6cf2213fc5053b67c22.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "flashoverlap",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 1,
+					"id" : "baseline_impl::@145eef247bfb46b6828c",
+					"jsonFile" : "target-baseline_impl-87228f5d19b69f3218c7.json",
+					"name" : "baseline_impl",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "gemm::@145eef247bfb46b6828c",
+					"jsonFile" : "target-gemm-819b4ab985942339bfb2.json",
+					"name" : "gemm",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "nccl_tool::@145eef247bfb46b6828c",
+					"jsonFile" : "target-nccl_tool-8128dc87bc433f3038a8.json",
+					"name" : "nccl_tool",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "norm::@145eef247bfb46b6828c",
+					"jsonFile" : "target-norm-a293a3165d39047682be.json",
+					"name" : "norm",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "overlap::@145eef247bfb46b6828c",
+					"jsonFile" : "target-overlap-c81f17c0fdf37af72414.json",
+					"name" : "overlap",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "overlap_impl::@145eef247bfb46b6828c",
+					"jsonFile" : "target-overlap_impl-38141ca80f370fd884de.json",
+					"name" : "overlap_impl",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "st_pybinding::@145eef247bfb46b6828c",
+					"jsonFile" : "target-st_pybinding-c3d4221854f54e69208c.json",
+					"name" : "st_pybinding",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/sgl-workspace/FlashOverlap/build",
+		"source" : "/sgl-workspace/FlashOverlap"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}
