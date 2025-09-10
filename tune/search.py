@@ -156,7 +156,7 @@ def compute_hint_process(rank, world_size, nccl_id,
     for w in range(WaveNum):     #wSize是外部参数，为min_group_size * (sm_count - 2) ， WaveNum = div_up(TileNum, wSize) ，samples的单位是tile级别
         index = torch.where(((samples >= w * wSize) * (samples < (w + 1) * wSize)).sum(dim=0) == 10) 
         #找出所有 在区间 [w*wSize, (w+1)*wSize) 内恰好有 10 个样本的列索引。一列最多也就10个符合的样本，因为samples是10行二维矩阵
-        if(rank==0): print(f"rank:{rank}, group:{w}, index : {index[0]}")
+        #if(rank==0): print(f"rank:{rank}, group:{w}, index : {index[0]}")
         if w < WaveNum - 1:
             if index[0].shape[0] < wSize:   #index[0] 是一维 tensor，里面是满足条件的列号,最多有wSize个列号
                 is_consistency = False      #如果列号数量不够，说明不一致？为啥？

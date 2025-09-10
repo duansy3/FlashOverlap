@@ -250,7 +250,7 @@ void OverlapImpl::GemmAllReduceOverlap(
     for (int iter = 0; iter < SegSize; iter++){
         int this_seg = cseg_cpu_ptr[iter];
         int commSize = M * N / TileNum * this_seg;
-        // The signal is reset by the wait kernel
+        // The signal is reset by the wait kernel  ，等待mm_ptr+iter的值变为this_seg,然后把flag清0
         kernel_wait_flag<<<1, 1, 0, this->comm_stream>>> (this_seg, (mm_ptr + iter));
         // Communicate the data
         NCCL_CHECK(ncclAllReduce((void *)(c_ptr + acc_addr), (void *)(c_ptr + acc_addr), commSize, ncclFloat16, ncclSum, this->comm, this->comm_stream));

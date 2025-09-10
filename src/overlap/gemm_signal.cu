@@ -48,7 +48,8 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
         ElementAccumulator,     // Element type from internal accumaccumulation
         ElementAccumulator>;    // Data type used to compute linear combination
 
-    using SwizzleThreadBlock = cutlass::gemm::threadblock::GemmIdentityThreadblockSwizzle<SwizzleSize>;
+    const  int SwizzleSize_ = 1; //dsy: for simplicity, swizzle size is set to 1
+    using SwizzleThreadBlock = cutlass::gemm::threadblock::GemmIdentityThreadblockSwizzle<SwizzleSize_>;  //dsy
 
     static bool const kInternalTranspose = cutlass::platform::is_same<LayoutC, cutlass::layout::ColumnMajor>::value;
 
@@ -65,7 +66,7 @@ void cutlass_gemm_signal(int M, int N, int K, int ReLDN, int* CommThr, half* A, 
       WarpShape,
       InstructionShape,
       NumStages,
-      SwizzleSize
+      SwizzleSize_  //dsy
     >;
 
     typename GemmSignal::Arguments arguments(

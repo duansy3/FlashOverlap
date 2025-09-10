@@ -54,7 +54,8 @@ template <
   typename ElementAccumulator_,
   typename ElementwiseFunctor_
 >
-class EpilogueVisitorSignaling {
+class EpilogueVisitorSignaling {       
+  //dsy：个人认为该类应该单独放一个头文件里,仿照cutlass/epilogue/threadblock/epilogue_visitor_with_softmax.h
 public:
 
   using AccumulatorTile = AccumulatorTile_;
@@ -172,7 +173,7 @@ public:
       ptr_D(args.ref_D.data()),
       ptr_Monitored_Matrix(args.ptr_Monitored_Matrix),
       ptr_Reorder_Array(args.ptr_Reorder_Array), 
-      kMonitoredColmun(args.kMonitoredColmun),
+      kMonitoredColmun(args.kMonitoredColmun),    // (N / ThreadblockN)
       kReorderedColumn(args.kReorderedColumn),
       kCommu_Seg_Array(args.kCommu_Seg_Array),
       if_monitor(args.if_monitor)
@@ -250,7 +251,7 @@ public:
       int tile_idx = (threadblock_offset.row() / ThreadblockM) * params_.kMonitoredColmun + \
       threadblock_offset.column() / ThreadblockN;
       int reordered_tile_idx = params_.ptr_Reorder_Array[tile_idx];
-      
+      printf("map_to_d: tile_idx=%d, reordered_tile_idx=%d \n", tile_idx, reordered_tile_idx);   //dsy
       return MatrixCoord((reordered_tile_idx / params_.kReorderedColumn) * ThreadblockM, \
         (reordered_tile_idx % params_.kReorderedColumn) * ThreadblockN);
   }
@@ -339,7 +340,7 @@ public:
 
     if (threadIdx.x > 0) {return;}
     int tile_idx = (threadblock_offset_.row() / ThreadblockM) * params_.kReorderedColumn + \
-      threadblock_offset_.column() / ThreadblockN;
+      threadblock_offset_.column() / ThreadblockN;           //
 
     int idx_bound = params_.kCommu_Seg_Array[0];
     int iter_idx = 0;
@@ -350,13 +351,15 @@ public:
 
     int local_order = atomicAdd(&params_.ptr_Monitored_Matrix[iter_idx], 1);
 
-    if (params_.if_monitor){
-      int global_order = atomicAdd(&params_.ptr_Monitored_Matrix[(params_.kMonitoredColmun - 1)], 1);
+    if (params_.if_monitor){    //在计算hint阶段if_monitor = true
+      int global_order = atomicAdd(&params_.ptr_Monitored_Matrix[(params_.kMonitoredColmun - 1)], 1);    //kMonitoredColmun =(N / ThreadblockN)
 
       arch::global_store<int, sizeof(int)>(
                 global_order,
-                (void *)(params_.ptr_Monitored_Matrix + params_.kMonitoredColmun + tile_idx),
+                (void *)(params_.ptr_Monitored_Matrix + params_.kMonitoredColmun + tile_idx),   //第一行不用来存储tile的全局顺序
                 true);
+      //printf("tile_idx:%d, local_order:%d, global_order:%d\n", tile_idx, local_order, global_order);  
+      
     }
   }
 
@@ -515,7 +518,7 @@ public:
       typename EpilogueFunctorOp::Params linear_scaling, 
       int * ptr_MM,   //// Monitored Matrix,size TM + 1, TN
       int * ptr_RA, 
-      int ldm_MM,
+      int ldm_MM,      
       int red_TN,    //allreduce情况下该值好像是1
       int * thr_CM,
       bool Monitor

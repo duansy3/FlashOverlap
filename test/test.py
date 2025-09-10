@@ -340,7 +340,7 @@ def main():
 
     m, n, k = args.m, args.n, args.k
 
-    file_path = f'../configs/m{m}n{n}k{k}_{gpu_name}.json'
+    file_path = f'../configs/solution_m{m}n{n}k{k}_{gpu_name}.json'
 
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
